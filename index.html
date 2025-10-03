@@ -202,127 +202,16 @@
 
     .charts {
       display: grid;
-      gap: 1.2rem;
+      gap: 1rem;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     }
 
-    .chart-container {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-    }
-
-    .chart-container canvas {
+    canvas {
       width: 100%;
       height: 240px;
       background: rgba(11, 24, 42, 0.7);
       border-radius: 12px;
       border: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .chart-tooltip {
-      position: absolute;
-      background: rgba(12, 26, 45, 0.92);
-      border: 1px solid rgba(76, 201, 240, 0.5);
-      color: var(--text);
-      padding: 0.4rem 0.65rem;
-      border-radius: 10px;
-      font-size: 0.75rem;
-      pointer-events: none;
-      display: none;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
-      transform: translate(-50%, -100%);
-      min-width: 140px;
-      text-align: center;
-    }
-
-    .panel-subtitle {
-      margin: 0.4rem 0 1rem;
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
-
-    .factory-diagram {
-      display: grid;
-      gap: 1rem;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    }
-
-    .factory-node {
-      background: rgba(12, 26, 45, 0.65);
-      border: 1px solid rgba(76, 201, 240, 0.12);
-      border-radius: 14px;
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .factory-node::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at top right, rgba(247, 37, 133, 0.07), transparent 45%);
-      pointer-events: none;
-    }
-
-    .factory-node.pending {
-      border-color: rgba(247, 37, 133, 0.2);
-    }
-
-    .factory-header {
-      font-size: 0.95rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-    }
-
-    .factory-footer {
-      font-size: 0.85rem;
-      color: var(--muted);
-    }
-
-    .bay-grid {
-      display: grid;
-      grid-template-columns: repeat(8, minmax(0, 1fr));
-      gap: 6px;
-    }
-
-    .bay-unit {
-      aspect-ratio: 1;
-      border-radius: 6px;
-      background: rgba(76, 201, 240, 0.1);
-      border: 1px solid rgba(76, 201, 240, 0.1);
-      position: relative;
-    }
-
-    .bay-unit.active {
-      background: rgba(76, 201, 240, 0.6);
-      border-color: rgba(76, 201, 240, 0.8);
-      box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.35);
-    }
-
-    .bay-unit.partial {
-      background: linear-gradient(135deg, rgba(76, 201, 240, 0.55), rgba(247, 37, 133, 0.55));
-      border-color: rgba(247, 37, 133, 0.7);
-    }
-
-    .factory-progress {
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-
-    .factory-pending-note {
-      grid-column: 1 / -1;
-      background: rgba(247, 37, 133, 0.08);
-      border: 1px dashed rgba(247, 37, 133, 0.35);
-      border-radius: 12px;
-      padding: 0.75rem 1rem;
-      font-size: 0.85rem;
-      color: var(--muted);
     }
 
     .log {
@@ -451,22 +340,11 @@
           <span id="costBreakdown">Resource heavy phase</span>
         </article>
         <article class="summary-card">
-          <h3>Cost per Robot</h3>
-          <p id="costPerRobot">$0</p>
-          <span id="costPerRobotTrend">Awaiting production updates</span>
-        </article>
-        <article class="summary-card">
           <h3>Energy Consumed</h3>
           <p id="energy">0 MWh</p>
           <span id="powerBreakdown">Manufacturing and infrastructure</span>
         </article>
       </div>
-    </section>
-
-    <section class="panel">
-      <h2>Factory &amp; Bay Footprint</h2>
-      <p class="panel-subtitle">Each panel represents a mega-factory with 1,000 bay slots. Filled cells indicate active bays, gradients indicate bays nearing completion, and pending sites track build progress.</p>
-      <div id="factoryDiagram" class="factory-diagram" aria-live="polite"></div>
     </section>
 
     <section class="panel">
@@ -486,20 +364,13 @@
     </section>
 
     <section class="panel charts">
-      <div class="chart-container">
+      <div>
         <h2>Robot Fleet Growth</h2>
         <canvas id="robotChart" width="400" height="220"></canvas>
-        <div class="chart-tooltip" data-chart-tooltip="robot" role="tooltip"></div>
       </div>
-      <div class="chart-container">
+      <div>
         <h2>Automation &amp; Efficiency</h2>
         <canvas id="automationChart" width="400" height="220"></canvas>
-        <div class="chart-tooltip" data-chart-tooltip="automation" role="tooltip"></div>
-      </div>
-      <div class="chart-container">
-        <h2>Cost per Robot Trajectory</h2>
-        <canvas id="costChart" width="400" height="220"></canvas>
-        <div class="chart-tooltip" data-chart-tooltip="cost" role="tooltip"></div>
       </div>
     </section>
 
@@ -664,8 +535,6 @@
       factoryPipeline: document.getElementById('factoryPipeline'),
       cost: document.getElementById('cost'),
       costBreakdown: document.getElementById('costBreakdown'),
-      costPerRobot: document.getElementById('costPerRobot'),
-      costPerRobotTrend: document.getElementById('costPerRobotTrend'),
       energy: document.getElementById('energy'),
       powerBreakdown: document.getElementById('powerBreakdown'),
       day: document.getElementById('day'),
@@ -673,180 +542,13 @@
       progress: document.getElementById('progress'),
       resourceTable: document.getElementById('resourceTable'),
       log: document.getElementById('log'),
-      notifications: document.getElementById('notifications'),
-      factoryDiagram: document.getElementById('factoryDiagram')
+      notifications: document.getElementById('notifications')
     };
 
-    const chartMeta = {
-      robot: {
-        canvas: document.getElementById('robotChart'),
-        ctx: document.getElementById('robotChart').getContext('2d'),
-        tooltip: document.querySelector('[data-chart-tooltip="robot"]'),
-        formatValue: (value) => formatNumber(value)
-      },
-      automation: {
-        canvas: document.getElementById('automationChart'),
-        ctx: document.getElementById('automationChart').getContext('2d'),
-        tooltip: document.querySelector('[data-chart-tooltip="automation"]'),
-        formatValue: (value) => `${formatNumber(value, 1)}%`
-      },
-      cost: {
-        canvas: document.getElementById('costChart'),
-        ctx: document.getElementById('costChart').getContext('2d'),
-        tooltip: document.querySelector('[data-chart-tooltip="cost"]'),
-        formatValue: (value) => formatCurrency(value)
-      }
+    const canvases = {
+      robot: document.getElementById('robotChart').getContext('2d'),
+      automation: document.getElementById('automationChart').getContext('2d')
     };
-
-    const chartState = {
-      robot: { points: [] },
-      automation: { points: [] },
-      cost: { points: [] }
-    };
-
-    const BAY_ICON_SEGMENTS = 40;
-
-    function shipmentsInTransit(resource) {
-      return shipments
-        .filter((shipment) => shipment.resource === resource)
-        .reduce((sum, shipment) => sum + shipment.amount, 0);
-    }
-
-    function hideTooltip(key) {
-      const meta = chartMeta[key];
-      if (meta?.tooltip) {
-        meta.tooltip.style.display = 'none';
-      }
-    }
-
-    function handleChartHover(key, event) {
-      const meta = chartMeta[key];
-      const stateData = chartState[key];
-      if (!meta || !stateData || !stateData.points || stateData.points.length === 0) {
-        hideTooltip(key);
-        return;
-      }
-
-      const rect = meta.canvas.getBoundingClientRect();
-      const scaleX = meta.canvas.width / rect.width;
-      const scaleY = meta.canvas.height / rect.height;
-      const x = (event.clientX - rect.left) * scaleX;
-
-      let nearest = null;
-      for (const point of stateData.points) {
-        const distance = Math.abs(point.x - x);
-        if (!nearest || distance < nearest.distance) {
-          nearest = { distance, point };
-        }
-      }
-
-      if (!nearest || nearest.distance > 18) {
-        hideTooltip(key);
-        return;
-      }
-
-      const tooltip = meta.tooltip;
-      if (!tooltip) return;
-
-      const cssX = nearest.point.x / scaleX;
-      const cssY = nearest.point.y / scaleY;
-      const clampedX = Math.max(60, Math.min(rect.width - 60, cssX));
-      const clampedY = Math.max(70, cssY);
-
-      tooltip.style.display = 'block';
-      tooltip.style.left = `${clampedX}px`;
-      tooltip.style.top = `${clampedY}px`;
-      tooltip.innerHTML = `<strong>${stateData.label}</strong><br />Day ${formatNumber(nearest.point.day)}<br />${stateData.formatValue(nearest.point.value)}`;
-    }
-
-    function attachChartInteractions() {
-      Object.keys(chartMeta).forEach((key) => {
-        const meta = chartMeta[key];
-        if (!meta?.canvas) return;
-        meta.canvas.addEventListener('mousemove', (event) => handleChartHover(key, event));
-        meta.canvas.addEventListener('mouseleave', () => hideTooltip(key));
-      });
-    }
-
-    function updateInfrastructureDiagram() {
-      const container = elements.factoryDiagram;
-      if (!container) return;
-      container.innerHTML = '';
-
-      const baysPerFactory = params.factoryConstruction.baysCapacity;
-      let baysRemaining = state.bays;
-
-      for (let i = 0; i < state.factories; i++) {
-        const node = document.createElement('div');
-        node.className = 'factory-node';
-
-        const header = document.createElement('div');
-        header.className = 'factory-header';
-        header.textContent = `Factory ${i + 1}`;
-        node.appendChild(header);
-
-        const grid = document.createElement('div');
-        grid.className = 'bay-grid';
-        const activeBays = Math.min(baysPerFactory, baysRemaining);
-        baysRemaining = Math.max(0, baysRemaining - baysPerFactory);
-        const baysPerCell = baysPerFactory / BAY_ICON_SEGMENTS;
-
-        for (let cellIndex = 0; cellIndex < BAY_ICON_SEGMENTS; cellIndex++) {
-          const cell = document.createElement('span');
-          cell.className = 'bay-unit';
-          const threshold = (cellIndex + 1) * baysPerCell;
-          if (activeBays >= threshold) {
-            cell.classList.add('active');
-          } else if (activeBays > threshold - baysPerCell) {
-            cell.classList.add('partial');
-          }
-          grid.appendChild(cell);
-        }
-
-        const footer = document.createElement('div');
-        footer.className = 'factory-footer';
-        footer.innerHTML = `<strong>${formatNumber(activeBays)}</strong> / ${formatNumber(baysPerFactory)} bays active`;
-        node.appendChild(grid);
-        node.appendChild(footer);
-        container.appendChild(node);
-      }
-
-      factoryQueue.forEach((site, index) => {
-        const node = document.createElement('div');
-        node.className = 'factory-node pending';
-
-        const header = document.createElement('div');
-        header.className = 'factory-header';
-        header.textContent = `Factory ${state.factories + index + 1} — under construction`;
-        node.appendChild(header);
-
-        const assumedStart = site.startDay ?? (site.readyDay - params.factoryConstruction.timeDays);
-        const totalDuration = Math.max(1, site.readyDay - assumedStart);
-        const elapsed = Math.max(0, state.day - assumedStart);
-        const progress = Math.min(1, elapsed / totalDuration);
-
-        const progressText = document.createElement('div');
-        progressText.className = 'factory-progress';
-        progressText.textContent = `Progress ${(progress * 100).toFixed(1)}% · ${Math.max(0, site.readyDay - state.day)} days remaining`;
-        node.appendChild(progressText);
-        container.appendChild(node);
-      });
-
-      const pendingBays = bayQueue.reduce((sum, bay) => sum + bay.amount, 0);
-      if (pendingBays > 0) {
-        const note = document.createElement('div');
-        note.className = 'factory-pending-note';
-        note.textContent = `${formatNumber(pendingBays)} construction bay${pendingBays > 1 ? 's' : ''} nearing completion across the campus.`;
-        container.appendChild(note);
-      }
-
-      if (container.childElementCount === 0) {
-        const placeholder = document.createElement('div');
-        placeholder.className = 'factory-pending-note';
-        placeholder.textContent = 'Initial mega-factory is preparing to activate additional construction bays.';
-        container.appendChild(placeholder);
-      }
-    }
 
     function resetSimulation() {
       state = {
@@ -1036,7 +738,7 @@
       state.cost += bayConstruction.cost;
 
       const buildTime = Math.max(4, Math.round(bayConstruction.timeDays * (0.8 - state.automation * 0.3)));
-      bayQueue.push({ amount: 1, readyDay: state.day + buildTime, energy: bayConstruction.energy, startDay: state.day });
+      bayQueue.push({ amount: 1, readyDay: state.day + buildTime, energy: bayConstruction.energy });
       logEvent('New construction bay under assembly. Commissioning in ' + buildTime + ' days.');
     }
 
@@ -1045,7 +747,7 @@
       const pendingFactories = factoryQueue.reduce((sum, site) => sum + site.amount, 0);
       if (pendingFactories > 0) return;
       const bayCapacity = state.factories * factoryConstruction.baysCapacity;
-      const futureBays = state.bays + bayQueue.reduce((sum, bay) => sum + bay.amount, 0);
+      const futureBays = state.bays + bayQueue.length;
       if (futureBays < bayCapacity * 0.92) return;
       if (state.robots < factoryConstruction.minRobots) return;
 
@@ -1053,23 +755,7 @@
         state.resources.steel >= factoryConstruction.steel &&
         state.resources.electronics >= factoryConstruction.electronics &&
         state.resources.composites >= factoryConstruction.composites;
-      if (!canBuild) {
-        let requested = false;
-        ['steel', 'electronics', 'composites'].forEach((resource) => {
-          const requirement = factoryConstruction[resource];
-          const onHand = state.resources[resource];
-          const onTheWay = shipmentsInTransit(resource);
-          const deficit = requirement - (onHand + onTheWay);
-          if (deficit > 0.01) {
-            scheduleShipment(resource, deficit);
-            requested = true;
-          }
-        });
-        if (requested) {
-          logEvent('Expediting bulk materials for next factory complex.');
-        }
-        return;
-      }
+      if (!canBuild) return;
 
       state.resources.steel -= factoryConstruction.steel;
       state.resources.electronics -= factoryConstruction.electronics;
@@ -1077,7 +763,7 @@
       state.cost += factoryConstruction.cost;
 
       const buildTime = Math.max(30, Math.round(factoryConstruction.timeDays * (0.85 - state.automation * 0.25)));
-      factoryQueue.push({ amount: 1, readyDay: state.day + buildTime, energy: factoryConstruction.energy, startDay: state.day });
+      factoryQueue.push({ amount: 1, readyDay: state.day + buildTime, energy: factoryConstruction.energy });
       logEvent('New factory campus breaking ground. Target completion in ' + buildTime + ' days.');
       notifyMilestone('Factory expansion initiated to host 1,000 additional bays.', true);
     }
@@ -1139,20 +825,13 @@
       elements.automation.textContent = `${formatNumber(state.automation * 100, 1)}%`;
       elements.automationTrend.textContent = `+${(params.automationGainPerDay * 100).toFixed(2)}% per day baseline`;
       elements.bays.textContent = formatNumber(state.bays);
-      const pendingBays = bayQueue.reduce((sum, bay) => sum + bay.amount, 0);
+      const pendingBays = bayQueue.length;
       elements.bayPipeline.textContent = pendingBays > 0 ? `${pendingBays} under construction` : 'No active bay builds';
-      const pendingFactories = factoryQueue.reduce((sum, site) => sum + site.amount, 0);
+      const pendingFactories = factoryQueue.length;
       elements.factories.textContent = formatNumber(state.factories);
-      elements.factoryPipeline.textContent = pendingFactories > 0 ? `${pendingFactories} mega-site${pendingFactories > 1 ? 's' : ''} in development` : 'Next site not initiated';
+      elements.factoryPipeline.textContent = pendingFactories > 0 ? `${pendingFactories} mega-site in development` : 'Next site not initiated';
       elements.cost.textContent = formatCurrency(state.cost);
       elements.costBreakdown.textContent = `Shipping ${formatCurrency(state.totalShipCost)} · Energy ${formatCurrency(state.totalEnergyCost)}`;
-      const previousEntry = history[history.length - 1];
-      const costPerRobot = state.robots > 0 ? state.cost / state.robots : 0;
-      const previousCost = previousEntry ? previousEntry.costPerRobot : costPerRobot;
-      const delta = costPerRobot - previousCost;
-      const direction = delta < -1 ? '↓' : delta > 1 ? '↑' : '→';
-      elements.costPerRobot.textContent = formatCurrency(costPerRobot);
-      elements.costPerRobotTrend.textContent = `${direction} ${formatCurrency(Math.abs(delta))} since last update`;
       elements.energy.textContent = `${formatNumber(state.energyMWh, 1)} MWh`;
       elements.powerBreakdown.textContent = `${formatNumber(state.energyMWh / Math.max(1, state.day), 2)} MWh/day average`;
       elements.day.textContent = formatNumber(state.day);
@@ -1172,24 +851,18 @@
           </tr>`;
         })
         .join('');
-
-      updateInfrastructureDiagram();
     }
 
     function drawCharts() {
       const padding = 30;
-      const days = history.map((entry) => entry.day);
+      const width = 400;
+      const height = 220;
 
-      const drawLineChart = (key, values, colorStops, label) => {
-        const meta = chartMeta[key];
-        const ctx = meta.ctx;
-        const width = ctx.canvas.width;
-        const height = ctx.canvas.height;
-
+      const drawLineChart = (ctx, values, colorStops, label) => {
         ctx.clearRect(0, 0, width, height);
         ctx.fillStyle = 'rgba(15, 30, 50, 0.6)';
         ctx.fillRect(0, 0, width, height);
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(padding, padding);
@@ -1197,12 +870,7 @@
         ctx.lineTo(width - padding / 2, height - padding);
         ctx.stroke();
 
-        const stateData = { label, formatValue: meta.formatValue, points: [] };
-
-        if (values.length === 0) {
-          chartState[key] = stateData;
-          return;
-        }
+        if (values.length < 2) return;
 
         const maxVal = Math.max(...values);
         const minVal = Math.min(...values);
@@ -1212,13 +880,9 @@
         colorStops.forEach((stop) => gradient.addColorStop(stop.offset, stop.color));
         ctx.strokeStyle = gradient;
         ctx.lineWidth = 2.5;
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
         ctx.beginPath();
-
         values.forEach((value, idx) => {
-          const ratio = values.length === 1 ? 0.5 : idx / (values.length - 1);
-          const x = padding + (width - padding * 1.5) * ratio;
+          const x = padding + ((width - padding * 1.5) * idx) / (values.length - 1);
           const normalized = (value - minVal) / range;
           const y = height - padding - normalized * (height - padding * 2);
           if (idx === 0) {
@@ -1226,45 +890,26 @@
           } else {
             ctx.lineTo(x, y);
           }
-          stateData.points.push({ x, y, value, day: days[idx] ?? idx });
         });
+        ctx.stroke();
 
-        if (values.length > 1) {
-          ctx.stroke();
-        }
-
-        ctx.fillStyle = 'rgba(255,255,255,0.65)';
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
         ctx.font = '12px Inter, sans-serif';
         ctx.fillText(label, padding, padding - 10);
         ctx.fillText(`Peak: ${formatNumber(maxVal)}`, padding, padding + 8);
-
-        ctx.fillStyle = 'rgba(255,255,255,0.85)';
-        stateData.points.forEach((point) => {
-          ctx.beginPath();
-          ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
-          ctx.fill();
-        });
-
-        chartState[key] = stateData;
       };
 
       const robotValues = history.map((entry) => entry.robots);
-      drawLineChart('robot', robotValues, [
+      drawLineChart(canvases.robot, robotValues, [
         { offset: 0, color: 'rgba(76, 201, 240, 1)' },
         { offset: 1, color: 'rgba(247, 37, 133, 1)' }
       ], 'Total robots');
 
       const automationValues = history.map((entry) => Math.round(entry.automation * 1000) / 10);
-      drawLineChart('automation', automationValues, [
+      drawLineChart(canvases.automation, automationValues, [
         { offset: 0, color: 'rgba(142, 202, 230, 1)' },
         { offset: 1, color: 'rgba(144, 190, 109, 1)' }
       ], 'Automation %');
-
-      const costValues = history.map((entry) => entry.costPerRobot ?? 0);
-      drawLineChart('cost', costValues, [
-        { offset: 0, color: 'rgba(255, 183, 3, 1)' },
-        { offset: 1, color: 'rgba(231, 111, 81, 1)' }
-      ], 'Cost per robot');
     }
 
     function stepSimulation() {
@@ -1290,8 +935,7 @@
         robots: state.robots,
         automation: state.automation,
         bays: state.bays,
-        factories: state.factories,
-        costPerRobot: state.robots > 0 ? state.cost / state.robots : 0
+        factories: state.factories
       });
       if (history.length > 720) history.shift();
       drawCharts();
@@ -1317,8 +961,6 @@
       document.getElementById('pauseBtn').disabled = true;
       logEvent('Simulation paused.');
     }
-
-    attachChartInteractions();
 
     document.getElementById('startBtn').addEventListener('click', startSimulation);
     document.getElementById('pauseBtn').addEventListener('click', stopSimulation);
