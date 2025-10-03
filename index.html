@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Omni-Purpose Robot Production Simulation</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d1b2a;
+      --panel: #1b263b;
+      --panel-light: #243654;
+      --accent: #4cc9f0;
+      --accent-2: #f72585;
+      --text: #e0e6ed;
+      --muted: #8ba3c7;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at top, rgba(76, 201, 240, 0.08), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 2rem 5vw 1rem;
+      background: linear-gradient(135deg, rgba(247, 37, 133, 0.2), rgba(76, 201, 240, 0.08));
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      letter-spacing: 0.04em;
+    }
+
+    header p {
+      margin: 0.5rem 0 0;
+      max-width: 720px;
+      color: var(--muted);
+    }
+
+    main {
+      padding: 1.5rem 5vw 3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .panel {
+      background: linear-gradient(155deg, rgba(36, 54, 84, 0.95), rgba(27, 38, 59, 0.9));
+      border: 1px solid rgba(76, 201, 240, 0.08);
+      border-radius: 18px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .controls .group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    button, select {
+      background: var(--panel-light);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.6rem 1.1rem;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
+    }
+
+    button:hover, select:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(76, 201, 240, 0.2);
+      border-color: var(--accent);
+    }
+
+    button:active {
+      transform: translateY(0px) scale(0.99);
+    }
+
+    .summary-grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .summary-card {
+      background: rgba(12, 26, 45, 0.7);
+      border-radius: 16px;
+      padding: 1.2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .summary-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(247, 37, 133, 0.12), transparent 40%);
+      pointer-events: none;
+    }
+
+    .summary-card h3 {
+      margin: 0;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+    }
+
+    .summary-card p {
+      margin: 0.8rem 0 0;
+      font-size: 1.8rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    .summary-card span {
+      display: block;
+      margin-top: 0.35rem;
+      font-size: 0.8rem;
+      color: var(--accent);
+    }
+
+    .status-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .status-line strong {
+      color: var(--text);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar span {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width 0.3s ease;
+    }
+
+    .resource-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      font-size: 0.95rem;
+    }
+
+    .resource-table th,
+    .resource-table td {
+      padding: 0.65rem 0.8rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .resource-table th {
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .charts {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    canvas {
+      width: 100%;
+      height: 240px;
+      background: rgba(11, 24, 42, 0.7);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .log {
+      max-height: 220px;
+      overflow-y: auto;
+      margin-top: 1rem;
+      padding-right: 0.5rem;
+      font-size: 0.92rem;
+    }
+
+    .log-entry {
+      margin: 0.4rem 0;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+    }
+
+    .log-entry strong {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .notifications {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      margin-top: 1rem;
+    }
+
+    .notification {
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      background: rgba(76, 201, 240, 0.12);
+      border: 1px solid rgba(76, 201, 240, 0.3);
+    }
+
+    .notification.critical {
+      background: rgba(247, 37, 133, 0.15);
+      border-color: rgba(247, 37, 133, 0.4);
+    }
+
+    .narrative {
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    footer {
+      padding: 2rem 5vw;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: auto;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding: 1.6rem 1.5rem 1rem;
+      }
+
+      main {
+        padding: 1.2rem 1.5rem 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Omni-Purpose Self-Constructing Robot Expansion Simulator</h1>
+    <p>
+      Track the compounding growth of autonomous construction robots from the first production run
+      through self-scaling factories, improving automation, and resource optimization. All estimates
+      are grounded in conservative industrial values for power, materials, logistics, and labor.
+    </p>
+  </header>
+
+  <main>
+    <section class="panel controls">
+      <div class="group">
+        <button id="startBtn">Start Simulation</button>
+        <button id="pauseBtn" disabled>Pause</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+      <div class="group">
+        <label for="speed">Speed:</label>
+        <select id="speed">
+          <option value="1000">1 day / sec</option>
+          <option value="500">2 days / sec</option>
+          <option value="200">5 days / sec</option>
+          <option value="100">10 days / sec</option>
+        </select>
+      </div>
+      <div class="group status-line">
+        <span>Current Day: <strong id="day">0</strong> (<span id="year">Year 0</span>)</span>
+        <span>Simulation Horizon: 12 years (4,380 days)</span>
+      </div>
+      <div class="progress-bar" aria-label="Simulation progress">
+        <span id="progress" style="width: 0%"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="summary-grid">
+        <article class="summary-card">
+          <h3>Total Robots</h3>
+          <p id="robots">120</p>
+          <span id="robotGrowth">+0/day</span>
+        </article>
+        <article class="summary-card">
+          <h3>Automation Level</h3>
+          <p id="automation">50%</p>
+          <span id="automationTrend">Trending upward</span>
+        </article>
+        <article class="summary-card">
+          <h3>Construction Bays</h3>
+          <p id="bays">12</p>
+          <span id="bayPipeline">0 in fabrication</span>
+        </article>
+        <article class="summary-card">
+          <h3>Factories Online</h3>
+          <p id="factories">1</p>
+          <span id="factoryPipeline">Next site not initiated</span>
+        </article>
+        <article class="summary-card">
+          <h3>Total Program Cost</h3>
+          <p id="cost">$0</p>
+          <span id="costBreakdown">Resource heavy phase</span>
+        </article>
+        <article class="summary-card">
+          <h3>Energy Consumed</h3>
+          <p id="energy">0 MWh</p>
+          <span id="powerBreakdown">Manufacturing and infrastructure</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Resource Status</h2>
+      <table class="resource-table" aria-describedby="Resource inventories and flows">
+        <thead>
+          <tr>
+            <th>Resource</th>
+            <th>Inventory</th>
+            <th>Extraction / Day</th>
+            <th>Avg Cost / unit</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="resourceTable"></tbody>
+      </table>
+    </section>
+
+    <section class="panel charts">
+      <div>
+        <h2>Robot Fleet Growth</h2>
+        <canvas id="robotChart" width="400" height="220"></canvas>
+      </div>
+      <div>
+        <h2>Automation &amp; Efficiency</h2>
+        <canvas id="automationChart" width="400" height="220"></canvas>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Operational Log</h2>
+      <div class="log" id="log" aria-live="polite"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Milestone Notifications</h2>
+      <div class="notifications" id="notifications" aria-live="assertive"></div>
+    </section>
+
+    <section class="panel narrative">
+      <h2>Simulation Assumptions</h2>
+      <p>
+        Each construction bay initially assembles 1.2 omni-purpose robots per day, requiring precision
+        alloys, rare-earth electronics, high-strength composites, and 620 kWh of energy. Supply chains
+        start 50% automated, with three-day shipping leads from extraction sites. As the fleet grows,
+        reasoning improvements enable better resource allocation, reducing material intensity and build
+        times while elevating automation of extraction, shipping, and assembly. New factories are
+        commissioned when bay capacity approaches existing limits, each adding room for 1,000 bays and
+        requiring heavy civil work with 90-day baseline timelines. All costs include procurement,
+        fabrication, shipping, and power at industrial market rates.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    Generated for exploration purposes — fine-tune parameters directly in the source to test alternative
+    scenarios.
+  </footer>
+
+  <script>
+    const formatNumber = (value, digits = 0) =>
+      value.toLocaleString(undefined, { maximumFractionDigits: digits, minimumFractionDigits: digits });
+
+    const formatCurrency = (value) => {
+      return '$' + formatNumber(value, value > 1000 ? 0 : 2);
+    };
+
+    const params = {
+      simulationDays: 4380,
+      initial: {
+        robots: 120,
+        bays: 12,
+        factories: 1,
+        automation: 0.5,
+        reasoningLevel: 0,
+        cost: 0,
+        energyMWh: 0
+      },
+      robotsPerBayPerDay: 1.2,
+      fabricationTime: 3,
+      baseFabricationCapacity: 400,
+      resourcesPerRobot: {
+        steel: 0.42, // tonnes per robot
+        electronics: 0.055, // tonnes
+        composites: 0.12 // tonnes
+      },
+      energyPerRobot: 0.62, // MWh
+      logistics: {
+        shippingLeadDays: 3,
+        shippingCostPerTonne: 140, // USD per tonne shipped
+        baseDistanceCost: 4800 // USD per shipment batch
+      },
+      baseExtractionPerDay: {
+        steel: 120,
+        electronics: 9,
+        composites: 24
+      },
+      resourceCosts: {
+        steel: 820, // USD per tonne
+        electronics: 9200,
+        composites: 4200
+      },
+      bayConstruction: {
+        timeDays: 10,
+        steel: 12,
+        electronics: 1.6,
+        composites: 3.8,
+        energy: 18, // MWh
+        cost: 1_400_000,
+        minRobots: 180
+      },
+      factoryConstruction: {
+        timeDays: 90,
+        steel: 2200,
+        electronics: 260,
+        composites: 840,
+        energy: 3200,
+        cost: 1_250_000_000,
+        baysCapacity: 1000,
+        minRobots: 5000
+      },
+      inventoryCaps: {
+        steel: 2000,
+        electronics: 160,
+        composites: 480
+      },
+      automationGainPerDay: 0.00045,
+      automationMax: 0.97,
+      reasoningMilestones: [
+        {
+          robots: 1000,
+          productionBoost: 0.18,
+          materialReduction: 0.08,
+          fabricationReduction: 0.5,
+          automationBonus: 0.06,
+          message: 'Cognitive optimization suite deployed — 8% less material per robot, production +18%.'
+        },
+        {
+          robots: 5000,
+          productionBoost: 0.25,
+          materialReduction: 0.07,
+          fabricationReduction: 0.7,
+          automationBonus: 0.08,
+          message: 'Autonomous process planners online — major gains in fabrication throughput and logistics.'
+        },
+        {
+          robots: 20000,
+          productionBoost: 0.35,
+          materialReduction: 0.1,
+          fabricationReduction: 0.7,
+          automationBonus: 0.09,
+          message: 'Recursive self-improvement unlocks hyper-efficient build orchestration.'
+        }
+      ],
+      automationMilestones: [
+        { level: 0.65, message: 'Automated extraction surpasses 65% — mineral feeds stabilized.' },
+        { level: 0.8, message: 'Integrated AI logistics exceed 80% automation — shipping delays minimized.' },
+        { level: 0.9, message: 'Factory complex operates at >90% autonomous orchestration.' }
+      ],
+      robotMilestones: [
+        { count: 1000, message: '1,000 robots deployed — first megastructure crews operational.' },
+        { count: 10000, message: '10,000 robots — global deployment teams enabled.' },
+        { count: 100000, message: '100,000 robots — planetary-scale infrastructure achievable.' }
+      ],
+      bayMilestones: [
+        { count: 100, message: '100 construction bays assembled — throughput rising.' },
+        { count: 1000, message: '1,000 bays — full-scale manufacturing campus realized.' }
+      ]
+    };
+
+    let state;
+    let intervalId = null;
+    const shipments = [];
+    const fabricationQueue = [];
+    const bayQueue = [];
+    const factoryQueue = [];
+    const history = [];
+    const milestoneHit = new Set();
+
+    const elements = {
+      robots: document.getElementById('robots'),
+      robotGrowth: document.getElementById('robotGrowth'),
+      automation: document.getElementById('automation'),
+      automationTrend: document.getElementById('automationTrend'),
+      bays: document.getElementById('bays'),
+      bayPipeline: document.getElementById('bayPipeline'),
+      factories: document.getElementById('factories'),
+      factoryPipeline: document.getElementById('factoryPipeline'),
+      cost: document.getElementById('cost'),
+      costBreakdown: document.getElementById('costBreakdown'),
+      energy: document.getElementById('energy'),
+      powerBreakdown: document.getElementById('powerBreakdown'),
+      day: document.getElementById('day'),
+      year: document.getElementById('year'),
+      progress: document.getElementById('progress'),
+      resourceTable: document.getElementById('resourceTable'),
+      log: document.getElementById('log'),
+      notifications: document.getElementById('notifications')
+    };
+
+    const canvases = {
+      robot: document.getElementById('robotChart').getContext('2d'),
+      automation: document.getElementById('automationChart').getContext('2d')
+    };
+
+    function resetSimulation() {
+      state = {
+        day: 0,
+        robots: params.initial.robots,
+        bays: params.initial.bays,
+        factories: params.initial.factories,
+        automation: params.initial.automation,
+        reasoningLevel: params.initial.reasoningLevel,
+        productionBoost: 0,
+        materialReduction: 0,
+        fabricationMultiplier: 1,
+        cost: params.initial.cost,
+        energyMWh: params.initial.energyMWh,
+        resources: {
+          steel: 350,
+          electronics: 24,
+          composites: 70
+        },
+        totalShipCost: 0,
+        totalEnergyCost: 0,
+        averageDailyProduction: 0
+      };
+      shipments.length = 0;
+      fabricationQueue.length = 0;
+      bayQueue.length = 0;
+      factoryQueue.length = 0;
+      history.length = 0;
+      milestoneHit.clear();
+      elements.log.innerHTML = '';
+      elements.notifications.innerHTML = '';
+      logEvent('Simulation reset. Initial 12 construction bays primed with 120 robots.');
+      updateUI();
+      drawCharts();
+    }
+
+    function logEvent(message) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      entry.innerHTML = `<strong>Day ${state.day.toLocaleString()}</strong> — ${message}`;
+      elements.log.prepend(entry);
+      while (elements.log.childNodes.length > 160) {
+        elements.log.removeChild(elements.log.lastChild);
+      }
+    }
+
+    function notifyMilestone(message, critical = false) {
+      const note = document.createElement('div');
+      note.className = `notification${critical ? ' critical' : ''}`;
+      note.textContent = message;
+      elements.notifications.prepend(note);
+      while (elements.notifications.childNodes.length > 20) {
+        elements.notifications.removeChild(elements.notifications.lastChild);
+      }
+    }
+
+    function scheduleShipment(resource, amount) {
+      if (amount <= 0) return;
+      const arrivalDay = state.day + params.logistics.shippingLeadDays;
+      const shippingCost = params.logistics.baseDistanceCost +
+        amount * params.logistics.shippingCostPerTonne * (1.05 - state.automation * 0.2);
+      shipments.push({ resource, amount, arrivalDay, shippingCost });
+    }
+
+    function processShipments() {
+      for (let i = shipments.length - 1; i >= 0; i--) {
+        const shipment = shipments[i];
+        if (shipment.arrivalDay <= state.day) {
+          state.resources[shipment.resource] += shipment.amount;
+          state.cost += shipment.shippingCost;
+          state.totalShipCost += shipment.shippingCost;
+          shipments.splice(i, 1);
+        }
+      }
+    }
+
+    function dailyExtractionPlan() {
+      const extractionMultiplier = 0.6 + state.automation * 0.9 + state.productionBoost * 0.5;
+      for (const resource of Object.keys(state.resources)) {
+        const dailyExtraction = params.baseExtractionPerDay[resource] * extractionMultiplier;
+        const projected = state.resources[resource];
+        const cap = params.inventoryCaps[resource];
+        if (projected < cap) {
+          const toShip = Math.min(cap - projected, dailyExtraction);
+          scheduleShipment(resource, toShip);
+        }
+      }
+    }
+
+    function processFabrication() {
+      let robotsCompletedToday = 0;
+      for (let i = fabricationQueue.length - 1; i >= 0; i--) {
+        const batch = fabricationQueue[i];
+        if (batch.readyDay <= state.day) {
+          robotsCompletedToday += batch.amount;
+          state.energyMWh += batch.energy;
+          fabricationQueue.splice(i, 1);
+        }
+      }
+      if (robotsCompletedToday > 0) {
+        state.robots += robotsCompletedToday;
+        logEvent(`${formatNumber(robotsCompletedToday)} robots completed final assembly.`);
+      }
+      return robotsCompletedToday;
+    }
+
+    function processBayCompletion() {
+      for (let i = bayQueue.length - 1; i >= 0; i--) {
+        const bay = bayQueue[i];
+        if (bay.readyDay <= state.day) {
+          state.bays += bay.amount;
+          state.energyMWh += bay.energy;
+          logEvent(`${bay.amount} construction bay${bay.amount > 1 ? 's' : ''} commissioned.`);
+          notifyMilestone(`Construction bay capacity increased to ${formatNumber(state.bays)}.`);
+          bayQueue.splice(i, 1);
+        }
+      }
+    }
+
+    function processFactoryCompletion() {
+      for (let i = factoryQueue.length - 1; i >= 0; i--) {
+        const site = factoryQueue[i];
+        if (site.readyDay <= state.day) {
+          state.factories += site.amount;
+          state.energyMWh += site.energy;
+          logEvent(`New factory campus online — ${params.factoryConstruction.baysCapacity} bay slots added.`);
+          notifyMilestone('Factory complex completed, expanding bay capacity by 1,000.');
+          factoryQueue.splice(i, 1);
+        }
+      }
+    }
+
+    function planProduction() {
+      const baseCapacity = state.bays * params.robotsPerBayPerDay;
+      const automationFactor = 0.8 + state.automation * 0.6;
+      const productionBoost = 1 + state.productionBoost;
+      const fabricationCapacity = params.baseFabricationCapacity * (1 + state.automation * 0.8) * (1 + state.productionBoost);
+      const maxProduction = Math.min(baseCapacity * automationFactor * productionBoost, fabricationCapacity);
+      const inventoryLimited = Math.min(
+        Math.floor(state.resources.steel / params.resourcesPerRobot.steel),
+        Math.floor(state.resources.electronics / params.resourcesPerRobot.electronics),
+        Math.floor(state.resources.composites / params.resourcesPerRobot.composites)
+      );
+      const toStart = Math.floor(Math.min(maxProduction, inventoryLimited));
+      if (toStart <= 0) {
+        return 0;
+      }
+
+      state.resources.steel -= toStart * params.resourcesPerRobot.steel;
+      state.resources.electronics -= toStart * params.resourcesPerRobot.electronics;
+      state.resources.composites -= toStart * params.resourcesPerRobot.composites;
+
+      const fabricationTime = Math.max(1, Math.round(params.fabricationTime * state.fabricationMultiplier));
+      const energy = toStart * params.energyPerRobot;
+
+      fabricationQueue.push({ amount: toStart, readyDay: state.day + fabricationTime, energy });
+      state.cost += toStart * (
+        params.resourcesPerRobot.steel * params.resourceCosts.steel +
+        params.resourcesPerRobot.electronics * params.resourceCosts.electronics +
+        params.resourcesPerRobot.composites * params.resourceCosts.composites +
+        params.energyPerRobot * 80 // electricity at $80/MWh industrial rate
+      );
+      state.totalEnergyCost += params.energyPerRobot * 80 * toStart;
+      return toStart;
+    }
+
+    function planBayConstruction() {
+      const { bayConstruction } = params;
+      const pendingBays = bayQueue.reduce((sum, bay) => sum + bay.amount, 0);
+      const capacityLimit = state.factories * params.factoryConstruction.baysCapacity;
+      if (state.bays + pendingBays >= capacityLimit) return;
+      if (state.robots < bayConstruction.minRobots) return;
+
+      const desiredBays = Math.min(capacityLimit, Math.floor(state.robots / 8));
+      if (state.bays + pendingBays >= desiredBays) return;
+
+      const canBuild =
+        state.resources.steel >= bayConstruction.steel &&
+        state.resources.electronics >= bayConstruction.electronics &&
+        state.resources.composites >= bayConstruction.composites;
+
+      if (!canBuild) return;
+
+      state.resources.steel -= bayConstruction.steel;
+      state.resources.electronics -= bayConstruction.electronics;
+      state.resources.composites -= bayConstruction.composites;
+      state.cost += bayConstruction.cost;
+
+      const buildTime = Math.max(4, Math.round(bayConstruction.timeDays * (0.8 - state.automation * 0.3)));
+      bayQueue.push({ amount: 1, readyDay: state.day + buildTime, energy: bayConstruction.energy });
+      logEvent('New construction bay under assembly. Commissioning in ' + buildTime + ' days.');
+    }
+
+    function planFactoryConstruction() {
+      const { factoryConstruction } = params;
+      const pendingFactories = factoryQueue.reduce((sum, site) => sum + site.amount, 0);
+      if (pendingFactories > 0) return;
+      const bayCapacity = state.factories * factoryConstruction.baysCapacity;
+      const futureBays = state.bays + bayQueue.length;
+      if (futureBays < bayCapacity * 0.92) return;
+      if (state.robots < factoryConstruction.minRobots) return;
+
+      const canBuild =
+        state.resources.steel >= factoryConstruction.steel &&
+        state.resources.electronics >= factoryConstruction.electronics &&
+        state.resources.composites >= factoryConstruction.composites;
+      if (!canBuild) return;
+
+      state.resources.steel -= factoryConstruction.steel;
+      state.resources.electronics -= factoryConstruction.electronics;
+      state.resources.composites -= factoryConstruction.composites;
+      state.cost += factoryConstruction.cost;
+
+      const buildTime = Math.max(30, Math.round(factoryConstruction.timeDays * (0.85 - state.automation * 0.25)));
+      factoryQueue.push({ amount: 1, readyDay: state.day + buildTime, energy: factoryConstruction.energy });
+      logEvent('New factory campus breaking ground. Target completion in ' + buildTime + ' days.');
+      notifyMilestone('Factory expansion initiated to host 1,000 additional bays.', true);
+    }
+
+    function checkReasoningMilestones() {
+      const milestone = params.reasoningMilestones[state.reasoningLevel];
+      if (!milestone) return;
+      if (state.robots >= milestone.robots) {
+        state.reasoningLevel += 1;
+        state.productionBoost += milestone.productionBoost;
+        state.materialReduction += milestone.materialReduction;
+        state.fabricationMultiplier *= milestone.fabricationReduction;
+        state.automation = Math.min(params.automationMax, state.automation + milestone.automationBonus);
+
+        params.resourcesPerRobot.steel *= 1 - milestone.materialReduction;
+        params.resourcesPerRobot.electronics *= 1 - milestone.materialReduction;
+        params.resourcesPerRobot.composites *= 1 - milestone.materialReduction;
+        params.energyPerRobot *= 1 - milestone.materialReduction * 0.6;
+        logEvent(milestone.message);
+        notifyMilestone(milestone.message, true);
+      }
+    }
+
+    function checkQuantitativeMilestones() {
+      params.automationMilestones.forEach((milestone) => {
+        if (state.automation >= milestone.level && !milestoneHit.has('auto' + milestone.level)) {
+          milestoneHit.add('auto' + milestone.level);
+          notifyMilestone(milestone.message);
+        }
+      });
+
+      params.robotMilestones.forEach((milestone) => {
+        if (state.robots >= milestone.count && !milestoneHit.has('robot' + milestone.count)) {
+          milestoneHit.add('robot' + milestone.count);
+          notifyMilestone(milestone.message, true);
+        }
+      });
+
+      params.bayMilestones.forEach((milestone) => {
+        if (state.bays >= milestone.count && !milestoneHit.has('bay' + milestone.count)) {
+          milestoneHit.add('bay' + milestone.count);
+          notifyMilestone(milestone.message);
+        }
+      });
+
+      if (state.factories >= 2 && !milestoneHit.has('factory2')) {
+        milestoneHit.add('factory2');
+        notifyMilestone('Second mega-factory operational — continental replication capacity.');
+      }
+      if (state.factories >= 5 && !milestoneHit.has('factory5')) {
+        milestoneHit.add('factory5');
+        notifyMilestone('Five mega-factories unified under autonomous coordination.', true);
+      }
+    }
+
+    function updateUI(producedToday = 0) {
+      elements.robots.textContent = formatNumber(state.robots);
+      elements.robotGrowth.textContent = producedToday > 0 ? `+${formatNumber(producedToday)} robots initiated/day` : 'Awaiting resource inflow';
+      elements.automation.textContent = `${formatNumber(state.automation * 100, 1)}%`;
+      elements.automationTrend.textContent = `+${(params.automationGainPerDay * 100).toFixed(2)}% per day baseline`;
+      elements.bays.textContent = formatNumber(state.bays);
+      const pendingBays = bayQueue.length;
+      elements.bayPipeline.textContent = pendingBays > 0 ? `${pendingBays} under construction` : 'No active bay builds';
+      const pendingFactories = factoryQueue.length;
+      elements.factories.textContent = formatNumber(state.factories);
+      elements.factoryPipeline.textContent = pendingFactories > 0 ? `${pendingFactories} mega-site in development` : 'Next site not initiated';
+      elements.cost.textContent = formatCurrency(state.cost);
+      elements.costBreakdown.textContent = `Shipping ${formatCurrency(state.totalShipCost)} · Energy ${formatCurrency(state.totalEnergyCost)}`;
+      elements.energy.textContent = `${formatNumber(state.energyMWh, 1)} MWh`;
+      elements.powerBreakdown.textContent = `${formatNumber(state.energyMWh / Math.max(1, state.day), 2)} MWh/day average`;
+      elements.day.textContent = formatNumber(state.day);
+      const years = (state.day / 365).toFixed(2);
+      elements.year.textContent = `Year ${years}`;
+      elements.progress.style.width = `${(state.day / params.simulationDays) * 100}%`;
+
+      elements.resourceTable.innerHTML = Object.entries(state.resources)
+        .map(([resource, amount]) => {
+          const extraction = params.baseExtractionPerDay[resource] * (0.6 + state.automation * 0.9 + state.productionBoost * 0.5);
+          return `<tr>
+            <td>${resource[0].toUpperCase() + resource.slice(1)}</td>
+            <td>${formatNumber(amount, 2)} tonnes</td>
+            <td>${formatNumber(extraction, 2)} t/day</td>
+            <td>${formatCurrency(params.resourceCosts[resource])}</td>
+            <td>${resource === 'electronics' ? 'Rare-earth + semiconductor package' : resource === 'composites' ? 'High-modulus carbon/ceramics' : 'Electric arc steel'} </td>
+          </tr>`;
+        })
+        .join('');
+    }
+
+    function drawCharts() {
+      const padding = 30;
+      const width = 400;
+      const height = 220;
+
+      const drawLineChart = (ctx, values, colorStops, label) => {
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = 'rgba(15, 30, 50, 0.6)';
+        ctx.fillRect(0, 0, width, height);
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(padding, padding);
+        ctx.lineTo(padding, height - padding);
+        ctx.lineTo(width - padding / 2, height - padding);
+        ctx.stroke();
+
+        if (values.length < 2) return;
+
+        const maxVal = Math.max(...values);
+        const minVal = Math.min(...values);
+        const range = maxVal - minVal || 1;
+
+        const gradient = ctx.createLinearGradient(padding, 0, width - padding, 0);
+        colorStops.forEach((stop) => gradient.addColorStop(stop.offset, stop.color));
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        values.forEach((value, idx) => {
+          const x = padding + ((width - padding * 1.5) * idx) / (values.length - 1);
+          const normalized = (value - minVal) / range;
+          const y = height - padding - normalized * (height - padding * 2);
+          if (idx === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        });
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.font = '12px Inter, sans-serif';
+        ctx.fillText(label, padding, padding - 10);
+        ctx.fillText(`Peak: ${formatNumber(maxVal)}`, padding, padding + 8);
+      };
+
+      const robotValues = history.map((entry) => entry.robots);
+      drawLineChart(canvases.robot, robotValues, [
+        { offset: 0, color: 'rgba(76, 201, 240, 1)' },
+        { offset: 1, color: 'rgba(247, 37, 133, 1)' }
+      ], 'Total robots');
+
+      const automationValues = history.map((entry) => Math.round(entry.automation * 1000) / 10);
+      drawLineChart(canvases.automation, automationValues, [
+        { offset: 0, color: 'rgba(142, 202, 230, 1)' },
+        { offset: 1, color: 'rgba(144, 190, 109, 1)' }
+      ], 'Automation %');
+    }
+
+    function stepSimulation() {
+      state.day += 1;
+      state.automation = Math.min(params.automationMax, state.automation + params.automationGainPerDay);
+
+      processShipments();
+      dailyExtractionPlan();
+      const producedToday = planProduction();
+      const robotsCompleted = processFabrication();
+      processBayCompletion();
+      processFactoryCompletion();
+      planBayConstruction();
+      planFactoryConstruction();
+      checkReasoningMilestones();
+      checkQuantitativeMilestones();
+
+      const totalProduction = producedToday > 0 ? producedToday : robotsCompleted;
+      updateUI(totalProduction);
+
+      history.push({
+        day: state.day,
+        robots: state.robots,
+        automation: state.automation,
+        bays: state.bays,
+        factories: state.factories
+      });
+      if (history.length > 720) history.shift();
+      drawCharts();
+
+      if (state.day >= params.simulationDays || state.robots >= 1_000_000) {
+        stopSimulation();
+        notifyMilestone('Simulation horizon reached — review production trajectory.', true);
+      }
+    }
+
+    function startSimulation() {
+      if (intervalId) return;
+      intervalId = setInterval(stepSimulation, Number(document.getElementById('speed').value));
+      document.getElementById('startBtn').disabled = true;
+      document.getElementById('pauseBtn').disabled = false;
+      logEvent('Simulation started. Monitoring compounding growth.');
+    }
+
+    function stopSimulation() {
+      clearInterval(intervalId);
+      intervalId = null;
+      document.getElementById('startBtn').disabled = false;
+      document.getElementById('pauseBtn').disabled = true;
+      logEvent('Simulation paused.');
+    }
+
+    document.getElementById('startBtn').addEventListener('click', startSimulation);
+    document.getElementById('pauseBtn').addEventListener('click', stopSimulation);
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      stopSimulation();
+      resetSimulation();
+    });
+
+    document.getElementById('speed').addEventListener('change', (event) => {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = setInterval(stepSimulation, Number(event.target.value));
+      }
+    });
+
+    resetSimulation();
+  </script>
+</body>
+</html>
